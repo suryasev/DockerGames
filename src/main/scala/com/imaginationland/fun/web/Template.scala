@@ -35,7 +35,7 @@ object Template {
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </a>
-              <a class="brand" href="/">Scalatra Examples</a>
+              <a class="brand" href="https://www.linkedin.com/in/suryasev">Sal Uryasev</a>
               <div class="nav-collapse collapse">
 
               </div><!--/.nav-collapse -->

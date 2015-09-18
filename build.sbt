@@ -30,6 +30,8 @@ libraryDependencies ++= {
     val embedMongoVersion = "0.2.2"
     val macwireVersion    = "0.8.0"
     val scalaMockVersion  = "3.2.1"
+//    val scalaZVersion     =  "7.2.0-M3"
+    val kdTreeVersion     =  "1.0.4"
     Seq(
         "com.typesafe"              %   "config"                      % configVersion,
         "org.scalatra"              %%  "scalatra"                    % scalatraVersion,
@@ -44,7 +46,9 @@ libraryDependencies ++= {
         "com.softwaremill.macwire"  %%  "macros"                      % macwireVersion,
         "com.softwaremill.macwire"  %%  "runtime"                     % macwireVersion,
         "ch.qos.logback"            %   "logback-classic"             % logbackVersion,
-        "org.scalamock"             %%  "scalamock-scalatest-support" % scalaMockVersion % "test"
+        "org.scalamock"             %%  "scalamock-scalatest-support" % scalaMockVersion % "test",
+//        "org.scalaz"                %%  "scalaz-core"                 % scalaZVersion,
+        "com.thesamet"              %%  "kdtree"                      % kdTreeVersion
     )
 }
 
