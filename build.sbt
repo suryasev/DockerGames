@@ -48,7 +48,8 @@ libraryDependencies ++= {
         "ch.qos.logback"            %   "logback-classic"             % logbackVersion,
         "org.scalamock"             %%  "scalamock-scalatest-support" % scalaMockVersion % "test",
 //        "org.scalaz"                %%  "scalaz-core"                 % scalaZVersion,
-        "com.thesamet"              %%  "kdtree"                      % kdTreeVersion
+        "com.thesamet"              %%  "kdtree"                      % kdTreeVersion,
+        "org.mongodb" %% "casbah-gridfs" % casbahVersion
     )
 }
 

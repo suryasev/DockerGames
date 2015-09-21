@@ -33,7 +33,7 @@ case class RGBAVector(red: Float, green: Float, blue: Float, alpha: Float) {
   }
 
   /**
-   * @return Tuple representation
+   * For use with KDTree library
    */
   def toTuple = (red, green, blue, alpha)
 
@@ -45,7 +45,7 @@ case class RGBAVector(red: Float, green: Float, blue: Float, alpha: Float) {
   def divide(n: Int) = new RGBAVector(red / n, green / n, blue / n, alpha / n)
 }
 
-class ImageRepresentation(val fileName: String, val vector: RGBAVector, val byteArray: Array[Byte])
+class ImageRepresentation(val fileName: String, val vector: RGBAVector)
 
 class ImageDimensionalOrdering extends DimensionalOrdering[ImageRepresentation] {
   override def dimensions = 4

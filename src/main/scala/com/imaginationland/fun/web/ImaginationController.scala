@@ -16,7 +16,7 @@ import scala.xml.Node
 /**
  * Created by suryasev on 9/15/15.
  */
-class ImaginationController extends ScalatraServlet with FileUploadSupport with ImageRepresentationOrdering {
+class ImaginationController extends ScalatraServlet with FileUploadSupport with DataModule with ImageRepresentationOrdering {
 
   val allImages = new HashMap[String, ImageRepresentation]()
 
@@ -32,7 +32,7 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
 
     val image = ImageIO.read(new ByteArrayInputStream(imageByteArray))
 
-    //Loop through every pixel and covert it to a RGBA Color object
+    //Loop through every pixel and covert it to an ImageIO RGBA Color object
     val rgbArray = new Array[Int](image.getWidth * image.getHeight)
     val pixels = image.getRGB(0, 0, image.getWidth, image.getHeight, rgbArray, 0, 1).toList.map(new Color(_, true))
 
@@ -41,9 +41,10 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
       .reduce(_ append _).divide(pixels.size)
 
     //Save the image for later!
-    val imageRepresentation = new ImageRepresentation(fileUpload.name, imageVector, imageByteArray)
-
+    val imageRepresentation = new ImageRepresentation(fileUpload.name, imageVector)
     allImages.put(imageRepresentation.fileName, imageRepresentation)
+
+    mongoPutFile(imageRepresentation.fileName, imageByteArray)
 
   }
 
@@ -87,6 +88,7 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
     Ok(displayPage(<p>Reindexing done!</p>))
   }
 
+  //Currently processFile and reindex runs on upload; in a prod env, both of these should run as part of a background job processor
   post("/upload") {
     fileParams.get("file") match {
       case Some(file) => {
@@ -104,11 +106,16 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
 
   //Display an image
   get("/img/:image_name") {
-    allImages.get(params("image_name")) match {
-      case Some(image: ImageRepresentation) => {
+    mongoGetFile(params("image_name")) match {
+      case Some(image: Array[Byte]) => {
         contentType = "image/png"
-        response.getOutputStream.write(image.byteArray)
+        response.getOutputStream.write(image)
       }
+      case None =>
+        BadRequest(displayPage(
+          <p>
+            Hey! This file does not exist
+          </p>))
     }
   }
 

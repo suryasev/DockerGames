@@ -13,7 +13,7 @@ import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.MultipartConfig
 import org.slf4j.{Logger, LoggerFactory}
 
-object ImaginationProvider extends App with WebModule with DataModule {
+object ImaginationProvider extends App with WebModule {
   val logger = LoggerFactory.getLogger(getClass)
   val config = ConfigFactory.load()
   val server = new Server(config.getInt("http.port"))
