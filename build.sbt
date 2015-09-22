@@ -3,7 +3,7 @@ import DockerKeys._
 import sbtdocker.mutable.Dockerfile
 import sbtdocker.ImageName
 
-name := "ImageMatcher"
+name := "image-matcher"
 
 organization := "com.imaginationland.fun"
 

@@ -1,11 +1,15 @@
 How to build:
 sbt docker
 
-How to use:
+This app needs a Mongo instance.
+
+To start a mongo instance with docker and then get its IP address do:
 docker run -p 27017:27017 -i mongo:latest
 docker ps
 docker inspect <container_id> | grep IPAddress | cut -d '"' -f 4
-docker run -e MONGO_HOST=<mongo_ip> -p 8080:8080 com.mintbeans/scalatra-mongodb-seed:v0.1-SNAPSHOT
+
+T
+docker run -e MONGO_HOST=<mongo_ip> -p 8080:8080 com.imaginationlanfun/image-matcher:v0.1
 
 Navigate to:
 <docker_ip>/imagination/

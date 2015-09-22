@@ -19,6 +19,12 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
 
   var tree = KDTree.fromSeq(Seq[ImageRepresentation]())
 
+  /**
+   * Simple templating (from docker seed)
+   *
+   * @param content
+   * @return
+   */
   def displayPage(content: Seq[Node]) = Template.page("Similar Images", content, url(_))
 
   /**
@@ -90,12 +96,12 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
   //Currently processFile and reindex runs on upload; in a prod env, both of these should run as part of a background job processor
   post("/upload") {
     fileParams.get("file") match {
-      case Some(file) => {
+      case Some(file) if file.size > 0 => {
         processFile(file)
         reindex
         redirect(s"/imagination/overactive/${file.name}")
       }
-      case None =>
+      case _ =>
         BadRequest(displayPage(
           <p>
             Hey! You forgot to select a file.
