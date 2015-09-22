@@ -3,17 +3,18 @@ package com.imaginationland.fun.data
 import java.io.ByteArrayOutputStream
 
 import com.mongodb.casbah.MongoClient
+import com.mongodb.casbah.commons.MongoDBObject
 import com.mongodb.casbah.gridfs.Imports._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
 trait DataModule {
 
-  val config: Config
+  val paramConfig: Config = ConfigFactory.load()
 
   lazy val mongo = {
-    val host = config.getString("mongo.host")
-    val port = config.getInt("mongo.port")
+    val host = paramConfig.getString("mongo.host")
+    val port = paramConfig.getInt("mongo.port")
 
     val logger = LoggerFactory.getLogger(classOf[DataModule])
     logger.info("Mongo client: host={} port={}", host, port)
@@ -21,7 +22,9 @@ trait DataModule {
     MongoClient(host, port)
   }
 
-  lazy val db = mongo(config.getString("mongo.db"))
+  lazy val db = mongo(paramConfig.getString("mongo.db"))
+
+  db.dropDatabase()
 
   //GridFS is a solution for storing large files or byte arrays
   lazy val fileGridFs = GridFS(db)
@@ -47,13 +50,21 @@ trait DataModule {
     f.map({ contents =>
       val stream = new ByteArrayOutputStream()
       contents.writeTo(stream)
-      stream.toByteArray()
+      stream.toByteArray
     })
   }
 
-  lazy val metadataCollection = db(config.getString("mongo.collections.metadata"))
+  lazy val metadataCollection = db(paramConfig.getString("mongo.collections.metadata"))
 
-  //  lazy val locationCollection = db(config.getString("mongo.collections.locations"))
-  //  lazy val locationRepository: LocationRepository = wire[MongoLocationRepository]
+  //Shortcut solution; this should use a static schema
+  //Update if fileName exists; else insert
+  def mongoPutImageRepresentation(image: ImageRepresentation) =
+    metadataCollection.update(MongoDBObject("name" -> image.fileName), image.toMongoDBObject, true)
+
+  def mongoGetImageRepresentation(key: String) =
+    metadataCollection.findOne(MongoDBObject("name" -> key)).map(ImageRepresentation.fromDBObject(_))
+
+  def mongoGetAllImageRepresentations =
+    metadataCollection.find().map(ImageRepresentation.fromDBObject(_))
 
 }

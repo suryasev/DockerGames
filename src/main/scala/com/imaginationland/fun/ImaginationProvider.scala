@@ -25,7 +25,7 @@ object ImaginationProvider extends App with WebModule {
   //Something buggy about jetty + normal way of setting multipartconfig
   holder.getRegistration.setMultipartConfig(
     MultipartConfig(
-      maxFileSize = Some(3*1024*1024),
+      maxFileSize = Some(1*1024*1024),
       fileSizeThreshold = Some(1*1024*1024)
     ).toMultipartConfigElement
   )

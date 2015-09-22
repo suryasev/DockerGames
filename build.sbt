@@ -3,7 +3,7 @@ import DockerKeys._
 import sbtdocker.mutable.Dockerfile
 import sbtdocker.ImageName
 
-name := "scalatra-mongodb-seed"
+name := "ImageMatcher"
 
 organization := "com.imaginationland.fun"
 
@@ -32,6 +32,7 @@ libraryDependencies ++= {
     val scalaMockVersion  = "3.2.1"
 //    val scalaZVersion     =  "7.2.0-M3"
     val kdTreeVersion     =  "1.0.4"
+    val specsVersion = "2.4.9"
     Seq(
         "com.typesafe"              %   "config"                      % configVersion,
         "org.scalatra"              %%  "scalatra"                    % scalatraVersion,
@@ -49,7 +50,8 @@ libraryDependencies ++= {
         "org.scalamock"             %%  "scalamock-scalatest-support" % scalaMockVersion % "test",
 //        "org.scalaz"                %%  "scalaz-core"                 % scalaZVersion,
         "com.thesamet"              %%  "kdtree"                      % kdTreeVersion,
-        "org.mongodb" %% "casbah-gridfs" % casbahVersion
+        "org.mongodb" %% "casbah-gridfs" % casbahVersion,
+        "org.specs2" %% "specs2-core" % specsVersion % "test"
     )
 }
 

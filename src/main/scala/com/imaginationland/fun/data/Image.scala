@@ -1,11 +1,14 @@
 package com.imaginationland.fun.data
 
+import com.mongodb.DBObject
+import com.mongodb.casbah.commons.MongoDBObject
 import com.thesamet.spatial.{Metric, DimensionalOrdering}
 
 /**
  * Created by suryasev on 9/17/15.
  */
 /**
+ * Monoid-ish rgba vector
  *
  * @param red
  * @param green
@@ -15,6 +18,10 @@ import com.thesamet.spatial.{Metric, DimensionalOrdering}
 case class RGBAVector(red: Float, green: Float, blue: Float, alpha: Float) {
   def append(b: RGBAVector): RGBAVector =
     new RGBAVector(red + b.red, green + b.green, blue + b.blue, alpha + b.alpha)
+
+  /**
+   * For use with KDTree library
+   */
 
   /**
    * Convenience function for use with KBTree library
@@ -32,12 +39,13 @@ case class RGBAVector(red: Float, green: Float, blue: Float, alpha: Float) {
     }
   }
 
-  /**
-   * For use with KDTree library
-   */
   def toTuple = (red, green, blue, alpha)
 
   def toSeq = Seq(red, green, blue, alpha)
+
+  /**
+   * End KDTree library portion
+   */
 
   /**
    * Normalize RGBA by value n
@@ -45,8 +53,26 @@ case class RGBAVector(red: Float, green: Float, blue: Float, alpha: Float) {
   def divide(n: Int) = new RGBAVector(red / n, green / n, blue / n, alpha / n)
 }
 
-class ImageRepresentation(val fileName: String, val vector: RGBAVector)
+class ImageRepresentation(val fileName: String, val vector: RGBAVector) {
+  def toMongoDBObject = MongoDBObject("name" -> fileName, "r" -> vector.red, "g" -> vector.green,
+    "b" -> vector.blue, "a" -> vector.alpha)
 
+  override def toString(): String = {
+    s"$fileName ${vector.toString}"
+  }
+}
+
+object ImageRepresentation {
+  def fromDBObject(f: DBObject) = {
+    val vector = RGBAVector(f.get("r").asInstanceOf[Double].toFloat,f.get("g").asInstanceOf[Double].toFloat,
+      f.get("b").asInstanceOf[Double].toFloat,f.get("a").asInstanceOf[Double].toFloat)
+    new ImageRepresentation(f.get("name").asInstanceOf[String], vector)
+  }
+}
+
+/**
+ * For use with KDTree library;
+ */
 class ImageDimensionalOrdering extends DimensionalOrdering[ImageRepresentation] {
   override def dimensions = 4
 
@@ -55,11 +81,14 @@ class ImageDimensionalOrdering extends DimensionalOrdering[ImageRepresentation] 
     ((x.vector.byDimension(dimension) - y.vector.byDimension(dimension)) * 1000).toInt
 }
 
+/**
+ * For use with KDTree library;
+ */
 class ImageDimensionalMetric extends Metric[ImageRepresentation, Float] {
   /** Returns the distance between two points. Modified from Metric codebase. */
   override def distance(x: ImageRepresentation, y: ImageRepresentation): Float =
-    x.vector.toSeq.zip(y.vector.toSeq).map { z =>
-      val d = z._1 - z._2
+    x.vector.toSeq.zip(y.vector.toSeq).map { p =>
+      val d = p._1 - p._2
       d * d
     }.sum
 

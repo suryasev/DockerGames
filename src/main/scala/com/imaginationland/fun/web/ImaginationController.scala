@@ -9,7 +9,6 @@ import com.thesamet.spatial.KDTree
 import org.scalatra.servlet.{FileItem, FileUploadSupport, SizeConstraintExceededException}
 import org.scalatra.{BadRequest, Ok, RequestEntityTooLarge, ScalatraServlet}
 
-import scala.collection.mutable.HashMap
 import scala.xml.Node
 
 
@@ -18,15 +17,15 @@ import scala.xml.Node
  */
 class ImaginationController extends ScalatraServlet with FileUploadSupport with DataModule with ImageRepresentationOrdering {
 
-  val allImages = new HashMap[String, ImageRepresentation]()
-
   var tree = KDTree.fromSeq(Seq[ImageRepresentation]())
-
-  //Standard way of setting maxFileSize seems to not properly work with jetty; using workaround in ImaginationProvider
-  //configureMultipartHandling(MultipartConfig(maxFileSize = Some(3*1024*1024)))
 
   def displayPage(content: Seq[Node]) = Template.page("Similar Images", content, url(_))
 
+  /**
+   * Store file data to Mongo; compute RGBA Vectors and store them to mongo
+   *
+   * @param fileUpload
+   */
   def processFile(fileUpload: FileItem) = {
     val imageByteArray = fileUpload.get()
 
@@ -41,10 +40,8 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
       .reduce(_ append _).divide(pixels.size)
 
     //Save the image for later!
-    val imageRepresentation = new ImageRepresentation(fileUpload.name, imageVector)
-    allImages.put(imageRepresentation.fileName, imageRepresentation)
-
-    mongoPutFile(imageRepresentation.fileName, imageByteArray)
+    mongoPutImageRepresentation(new ImageRepresentation(fileUpload.name, imageVector))
+    mongoPutFile(fileUpload.name, imageByteArray)
 
   }
 
@@ -55,12 +52,12 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
     tree.findNearest(ir, n + 1).filter(_.fileName != ir.fileName).take(n)
   }
 
-  def reindex = {
-    tree = KDTree.fromSeq[ImageRepresentation](allImages.values.toSeq)
-  }
+  //Should be called in a background process
+  def reindex =
+    tree = KDTree.fromSeq[ImageRepresentation](mongoGetAllImageRepresentations.toSeq)
 
   error {
-    case e: SizeConstraintExceededException => RequestEntityTooLarge("The maximum file size accepted is 3 MB!")
+    case e: SizeConstraintExceededException => RequestEntityTooLarge("The maximum file size accepted is 1 MB!")
   }
 
   get("/") {
@@ -79,13 +76,15 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
         </p>
 
         <p>
-          The maximum file size accepted is 3 MB.
+          The maximum file size accepted is 1 MB.
         </p>)
   }
 
   get("/reindex") {
     reindex
-    Ok(displayPage(<p>Reindexing done!</p>))
+    Ok(displayPage(<p>Reindexing done!
+      {mongoGetAllImageRepresentations.toList.toString}
+    </p>))
   }
 
   //Currently processFile and reindex runs on upload; in a prod env, both of these should run as part of a background job processor
@@ -120,12 +119,12 @@ class ImaginationController extends ScalatraServlet with FileUploadSupport with 
   }
 
   get("/overactive/:image_name") {
-    allImages.get(params("image_name")) match {
+    mongoGetImageRepresentation(params("image_name")) match {
       case Some(image: ImageRepresentation) => {
         val similarImages = fetchSimilarImages(image, 3)
         Ok(displayPage(
           <h3>
-            Primary Image
+            Primary Imagination
           </h3>
               <img src={"/imagination/img/" + image.fileName}/>
             <h3>

@@ -1,56 +1,30 @@
-# Scalatra MongoDB Seed
+How to build:
+sbt docker
 
-A seed for building [microservices](http://martinfowler.com/articles/microservices.html) with [Scalatra](http://www.scalatra.org/),
- [MongoDB](http://www.mongodb.org/) and [Docker](https://www.docker.com/).
+How to use:
+docker run -p 27017:27017 -i mongo:latest
+docker ps
+docker inspect <container_id> | grep IPAddress | cut -d '"' -f 4
+docker run -e MONGO_HOST=<mongo_ip> -p 8080:8080 com.mintbeans/scalatra-mongodb-seed:v0.1-SNAPSHOT
 
-Project goals and assumptions:
+Navigate to:
+<docker_ip>/imagination/
+Then just upload images
 
-   * provide a usable project template based on technologies, that are easily accessible for most **Java** developers (e.g. Scalatra and Jetty).
-   * showcase selected features of **Scala**, **sbt** and **Docker**.
+Technology overview:
+Used Scalatra MongoDB docker seed from typesafe
+Scalatra for webapp
+MongoDB + casbah + gridfs for database
+Images traversed with (built-in) Java ImageIO
+Images are compared by distance between average RGBA vectors (sum(red) / pixelCount; sum(blue) / pixelCount; etc.)
+KDTrees used for log(n) lookups
 
-## Development mode
-
-For rapid development feedback use the [sbt-revolver](https://github.com/spray/sbt-revolver) plugin:
-
-    $ sbt ~re-start
-
-## Deploying with Docker
-
-### Preparing a Docker image
-
-Build an image using the [sbt-docker](https://github.com/marcuslonnberg/sbt-docker) plugin:
-
-    $ sbt docker
-
-You can verify the list of available images by running:
-
-    $ docker images
-
-### Running the image in a new Docker container
-
-A minimal setup will require a `MONGO_HOST` variable to be passed to the container:
-
-    $ docker ps #Get the CONTAINER ID
-    $ docker inspect <container_id> | grep IPAddress | cut -d '"' -f 4
-    $ docker run -e MONGO_HOST=<mongo_ip> -p 8080:8080 com.mintbeans/scalatra-mongodb-seed:v0.1-SNAPSHOT
-
-A slightly more specific configuration can be setup as follows:
-
-    $ docker run -e MONGO_HOST=192.168.0.2 -e MONGO_PORT=27017 -e MONGO_DB=test -p 8080:8080 com.mintbeans/scalatra-mongodb-seed:v0.1-SNAPSHOT
-
-To verify the setup, check `DOCKER_HOST` under the published port:
-
-    $ curl -v http://DOCKER_HOST:8080/locations
-
-### Changing Logback configuration at runtime
-
-The image should include a `logback.xml` file with configuration [scanning](http://logback.qos.ch/manual/configuration.html#autoScan) enabled. You can alter most logging settings by following these steps:
-
-    $ docker ps
-    $ docker exec -it <container-id> bash
-    [ root@23b382f59781:/data ]$ vim /app/logback.xml
-    [ root@23b382f59781:/data ]$ exit
-
-## Links
-
-* [Working with Docker](http://docs.docker.com/introduction/working-with-docker/).
+Shortcuts taken:
+Did not use static schemas (I usually prefer Avro encoding)
+Testing very simple; ideally would also test scalatra, mongodb and so forth
+Webapp templating not really done
+Reindexing currently happens after every PUT; proper solution would do this with a background process instead
+Actual file size limit can probably be way higher; need to investigate how JVM settings work w/ docker
+Edge cases not really considered (e.g. not checking that something is not an image)
+Images are unique by name; this can be done more cleverly
+RGBAVectors were meant to be Semigroups
